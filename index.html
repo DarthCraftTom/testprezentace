@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prezentace</title>
-    <!-- Knihovny pro export do PDF a PPTX -->
+    <!-- Knihovny pro export do PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
     <style>
         /* Reset a základní nastavení */
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -527,7 +526,6 @@
             </div>
             <div class="options-row" style="gap: 0.5cqi;">
                 <button id="exportPdfBtn" class="action-btn">📄 Do PDF</button>
-                <button id="exportPptxBtn" class="action-btn">📊 Do PPTX</button>
             </div>
         </div>
 
@@ -647,7 +645,6 @@
         // --- EXPORT A PŘEPÍNAČ ANIMACÍ ---
         const toggleAnimBtn = document.getElementById('toggleAnimBtn');
         const exportPdfBtn = document.getElementById('exportPdfBtn');
-        const exportPptxBtn = document.getElementById('exportPptxBtn');
 
         // Přepínání animací
         toggleAnimBtn.addEventListener('click', () => {
@@ -669,7 +666,7 @@
         });
 
         // Hlavní funkce pro export obrazovek
-        async function generateExport(type, btnElement, btnOriginalText) {
+        async function generateExport(btnElement, btnOriginalText) {
             btnElement.innerText = "⏳ Pracuji...";
             btnElement.style.pointerEvents = 'none';
             
@@ -691,14 +688,8 @@
             container.style.maxWidth = '1920px';
             container.style.maxHeight = '1080px';
 
-            let doc;
-            if (type === 'pdf') {
-                const { jsPDF } = window.jspdf;
-                doc = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1920, 1080] });
-            } else {
-                doc = new pptxgen();
-                doc.layout = 'LAYOUT_16x9';
-            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1920, 1080] });
 
             // Průchod všemi snímky
             for (let i = 0; i < slides.length; i++) {
@@ -716,21 +707,12 @@
                 
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
-                if (type === 'pdf') {
-                    if (i > 0) doc.addPage();
-                    doc.addImage(imgData, 'JPEG', 0, 0, 1920, 1080);
-                } else {
-                    const slide = doc.addSlide();
-                    slide.addImage({ data: imgData, x: 0, y: 0, w: '100%', h: '100%' });
-                }
+                if (i > 0) doc.addPage();
+                doc.addImage(imgData, 'JPEG', 0, 0, 1920, 1080);
             }
 
             // Uložení souboru
-            if (type === 'pdf') {
-                doc.save('prezentace.pdf');
-            } else {
-                doc.writeFile({ fileName: 'prezentace.pptx' });
-            }
+            doc.save('prezentace.pdf');
 
             // Obnovení původního stavu zobrazení
             container.style.width = origW;
@@ -747,8 +729,7 @@
             btnElement.style.pointerEvents = 'auto';
         }
 
-        exportPdfBtn.addEventListener('click', () => generateExport('pdf', exportPdfBtn, '📄 Do PDF'));
-        exportPptxBtn.addEventListener('click', () => generateExport('pptx', exportPptxBtn, '📊 Do PPTX'));
+        exportPdfBtn.addEventListener('click', () => generateExport(exportPdfBtn, '📄 Do PDF'));
 
     </script>
 </body>
