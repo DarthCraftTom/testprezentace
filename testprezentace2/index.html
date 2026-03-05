@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Šablona Prezentace</title>
+    <style>
+        /* Výchozí proměnné - přepínané přes JS a data-atributy na body */
+        :root {
+            --accent: #27ae60; /* Výchozí zelená */
+            --bg-color: #ffffff;
+            --text-color: #2c3e50;
+            --box-bg: rgba(0,0,0,0.05);
+            --border-color: rgba(0,0,0,0.1);
+        }
+
+        /* Barevná témata - akcentní barva */
+        body[data-theme="green"] { --accent: #27ae60; }
+        body[data-theme="blue"] { --accent: #2980b9; }
+        body[data-theme="red-orange"] { --accent: #e74c3c; }
+        body[data-theme="gray"] { --accent: #7f8c8d; }
+
+        /* Pozadí a kontrast textu */
+        body[data-bg="white"] { 
+            --bg-color: #ffffff; 
+            --text-color: #2c3e50; 
+            --box-bg: rgba(0,0,0,0.05);
+            --border-color: rgba(0,0,0,0.1);
+        }
+        body[data-bg="white-gray"] { 
+            --bg-color: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); 
+            --text-color: #2c3e50; 
+            --box-bg: rgba(255,255,255,0.6);
+            --border-color: rgba(0,0,0,0.1);
+        }
+        body[data-bg="black-gray"] { 
+            --bg-color: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%); 
+            --text-color: #ecf0f1; 
+            --box-bg: rgba(255,255,255,0.05);
+            --border-color: rgba(255,255,255,0.2);
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            touch-action: pan-y;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        * { box-sizing: border-box; }
+
+        /* Progress Bar */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 5px;
+            background-color: var(--accent);
+            width: 0%;
+            z-index: 1000;
+            transition: width 0.3s ease, background-color 0.4s ease;
+        }
+
+        /* Prezentace a snímky */
+        #presentation {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease-in-out, visibility 0.4s;
+            display: flex;
+            flex-direction: column;
+            padding: 40px 8%;
+            padding-bottom: 120px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 10;
+        }
+
+        /* Třída pro vypnutí animací */
+        body.no-animations .slide { transition: none !important; }
+        body.no-animations #progress-bar { transition: none !important; }
+
+        /* Typografie a obsah */
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 10px;
+            display: inline-block;
+            transition: border-color 0.4s ease;
+        }
+
+        h2 {
+            font-size: 2.2rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        p, li {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        ul, ol { margin-left: 40px; margin-bottom: 20px; }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            align-self: flex-start;
+            background-color: var(--accent);
+            color: white;
+            transition: background-color 0.4s ease;
+        }
+
+        /* Boxy a rozložení */
+        .content-box {
+            background: var(--box-bg);
+            border-left: 5px solid var(--accent);
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: background 0.4s ease, border-color 0.4s ease;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .title-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .title-slide h1 {
+            border: none;
+            font-size: 5rem;
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+        
+        .title-slide .badge { align-self: center; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: var(--box-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: background 0.4s ease;
+        }
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            font-size: 1.2rem;
+        }
+        th {
+            background: var(--border-color);
+            color: var(--accent);
+            transition: color 0.4s ease;
+        }
+
+        /* --- NOVÉ MENU A OVLÁDÁNÍ --- */
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(30, 30, 30, 0.85); /* Tmavší poloprůhledné pozadí */
+            padding: 10px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+            z-index: 1002;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        body.idle {
+            cursor: none;
+        }
+
+        body.idle .controls {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+        }
+
+        .controls button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            margin: 0;
+            transition: color 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls button:hover {
+            color: var(--accent);
+            transform: scale(1.1);
+        }
+
+        #slideCounter {
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            min-width: 65px;
+            text-align: center;
+        }
+
+        .controls-divider {
+            width: 1px;
+            height: 24px;
+            background: rgba(255,255,255,0.3);
+        }
+
+        .settings-panel {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 1001;
+            display: none; /* Skryto ve výchozím stavu */
+            flex-direction: column;
+            gap: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            min-width: 250px;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .settings-panel.show {
+            display: flex;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .settings-panel h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: #bdc3c7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+        }
+
+        .options-row {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .option-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .option-btn:hover { transform: scale(1.15); }
+        .option-btn.active { 
+            border-color: white; 
+            box-shadow: 0 0 8px rgba(255,255,255,0.6); 
+            transform: scale(1.1);
+        }
+
+        .theme-green { background: #27ae60; }
+        .theme-blue { background: #2980b9; }
+        .theme-red { background: #e74c3c; }
+        .theme-gray { background: #7f8c8d; }
+
+        .bg-white { background: #ffffff; border: 1px solid #ccc; }
+        .bg-white-gray { background: linear-gradient(135deg, #fdfbfb, #ebedee); border: 1px solid #ccc; }
+        .bg-black-gray { background: linear-gradient(135deg, #2c3e50, #1a252f); }
+
+        .action-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: background 0.2s, border-color 0.2s;
+            flex: 1;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .action-btn:hover { background: rgba(255,255,255,0.2); }
+        .action-btn.active { 
+            background: var(--accent); 
+            border-color: var(--accent); 
+            font-weight: bold;
+        }
+
+        /* --- RESPONZIVITA --- */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.2rem; }
+            h2 { font-size: 1.6rem; }
+            p, li { font-size: 1.1rem; }
+            .title-slide h1 { font-size: 3rem; }
+            .grid-2 { grid-template-columns: 1fr; gap: 20px; }
+            .slide { padding: 30px 5%; padding-bottom: 120px; }
+            table { display: block; overflow-x: auto; }
+            
+            .controls { left: 50%; transform: translateX(-50%); right: auto; width: max-content; }
+            .settings-panel { right: 50%; transform: translateX(50%) translateY(20px); bottom: 85px; width: 90%; max-width: 350px; }
+            .settings-panel.show { transform: translateX(50%) translateY(0); }
+        }
+
+        /* --- STYLY PRO TISK (PDF EXPORT) --- */
+        @media print {
+            body { 
+                background: white !important; 
+                color: black !important; 
+                overflow: auto !important; 
+            }
+            .controls, .settings-panel, #progress-bar { 
+                display: none !important; 
+            }
+            #presentation {
+                position: relative !important;
+                height: auto !important;
+                display: block !important;
+            }
+            .slide { 
+                position: relative !important; 
+                opacity: 1 !important; 
+                visibility: visible !important; 
+                height: 100vh !important; /* Každý snímek na novou stránku */
+                page-break-after: always; 
+                padding: 40px !important;
+                background: white !important;
+            }
+            .content-box {
+                background: #f9f9f9 !important;
+                border: 1px solid #ddd !important;
+                border-left: 5px solid black !important;
+                page-break-inside: avoid;
+            }
+            h1 { border-bottom-color: black !important; color: black !important; }
+            .badge { background-color: #eee !important; color: black !important; border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body data-theme="green" data-bg="white">
+
+    <div id="progress-bar"></div>
+
+    <div id="presentation">
+        
+        <!-- SLIDE 1: ÚVOD (NADPIS) -->
+        <div class="slide active title-slide">
+            <span class="badge">Šablona prezentace</span>
+            <h1>Název vaší prezentace</h1>
+            <h2>Podtitul nebo stručný popis tématu</h2>
+            <p style="opacity: 0.7;">Autor: Jméno Příjmení</p>
+        </div>
+
+        <!-- SLIDE 2: TEXT A ODRÁŽKY -->
+        <div class="slide">
+            <span class="badge">Sekce 1</span>
+            <h1>Základní rozložení textu</h1>
+            <div class="grid-2">
+                <div>
+                    <h2>Hlavní body</h2>
+                    <ul>
+                        <li>První důležitý bod vaší prezentace.</li>
+                        <li>Druhý bod, který na něj navazuje.</li>
+                        <li>Třetí bod obsahující <strong>zvýrazněný text</strong> pro upoutání pozornosti.</li>
+                        <li>Tato šablona automaticky formátuje odrážky.</li>
+                    </ul>
+                </div>
+                <div class="content-box">
+                    <h2>Doplňující box</h2>
+                    <p>Tento box slouží pro definice, citace nebo důležité shrnutí. Mění barvu podle zvoleného pozadí a zachovává si akcentní barvu na levém okraji.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: DVĚ SLOUPCE (POROVNÁNÍ) -->
+        <div class="slide">
+            <span class="badge">Porovnání</span>
+            <h1>Rozložení do dvou sloupců</h1>
+            <div class="content-box">
+                <div class="grid-2">
+                    <div>
+                        <h2 style="margin-top: 0;">Varianta A</h2>
+                        <ul>
+                            <li style="margin-bottom: 15px;"><strong>Výhoda 1:</strong> Rychlost a efektivita. <br><span style="font-size: 1.1rem; opacity: 0.7;"><em>Příklad:</em> Nástroj X běží rychle.</span></li>
+                            <li><strong>Výhoda 2:</strong> Nízké náklady. <br><span style="font-size: 1.1rem; opacity: 0.7;"><em>Příklad:</em> Open-source software.</span></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h2 style="margin-top: 0;">Varianta B</h2>
+                        <ul>
+                            <li style="margin-bottom: 15px;"><strong>Nevýhoda 1:</strong> Složitější implementace. <br><span style="font-size: 1.1rem; opacity: 0.7;"><em>Příklad:</em> Vyžaduje školení personálu.</span></li>
+                            <li><strong>Nevýhoda 2:</strong> Závislost na třetí straně. <br><span style="font-size: 1.1rem; opacity: 0.7;"><em>Příklad:</em> Cloudové služby.</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: CITÁT / ZVÝRAZNĚNÍ -->
+        <div class="slide">
+            <span class="badge">Zamyšlení</span>
+            <h1>Důležitá myšlenka</h1>
+            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 60%; text-align: center;">
+                <h2 style="font-size: 3rem; font-style: italic; max-width: 800px; margin-bottom: 30px;">
+                    "Zde můžete vložit klíčový citát nebo nejdůležitější myšlenku celé prezentace, která má posluchačům utkvět v paměti."
+                </h2>
+                <p style="font-size: 1.5rem; font-weight: bold; opacity: 0.8;">— Jméno Autora Citátu</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: TABULKA -->
+        <div class="slide">
+            <span class="badge">Data</span>
+            <h1>Ukázka tabulky</h1>
+            <p>Tabulky jsou skvělé pro strukturovaná data. Styl tabulky se automaticky přizpůsobí světlému i tmavému režimu.</p>
+            
+            <table>
+                <tr>
+                    <th>Kategorie / Měsíc</th>
+                    <th>Leden</th>
+                    <th>Únor</th>
+                    <th>Březen</th>
+                </tr>
+                <tr>
+                    <td><strong>Příjmy</strong></td>
+                    <td>50 000 Kč</td>
+                    <td>55 000 Kč</td>
+                    <td>60 000 Kč</td>
+                </tr>
+                <tr>
+                    <td><strong>Výdaje</strong></td>
+                    <td>30 000 Kč</td>
+                    <td>32 000 Kč</td>
+                    <td>28 000 Kč</td>
+                </tr>
+                <tr>
+                    <td><strong>Zisk</strong></td>
+                    <td>20 000 Kč</td>
+                    <td>23 000 Kč</td>
+                    <td>32 000 Kč</td>
+                </tr>
+            </table>
+        </div>
+        
+    </div>
+
+    <!-- Panel nastavení -->
+    <div class="settings-panel" id="settingsPanel">
+        <h4>Barva motivu</h4>
+        <div class="options-row">
+            <div class="option-btn theme-green active" data-theme="green" title="Zelená"></div>
+            <div class="option-btn theme-blue" data-theme="blue" title="Modrá"></div>
+            <div class="option-btn theme-red" data-theme="red-orange" title="Červeno-oranžová"></div>
+            <div class="option-btn theme-gray" data-theme="gray" title="Šedá"></div>
+        </div>
+        
+        <h4>Barva pozadí</h4>
+        <div class="options-row">
+            <div class="option-btn bg-white active" data-bg="white" title="Bílá"></div>
+            <div class="option-btn bg-white-gray" data-bg="white-gray" title="Světlý přechod"></div>
+            <div class="option-btn bg-black-gray" data-bg="black-gray" title="Tmavý přechod"></div>
+        </div>
+        
+        <h4>Další možnosti a export</h4>
+        <div class="options-row">
+            <button id="toggleAnimBtn" class="action-btn active">✨ Animace: ZAP</button>
+        </div>
+        <div class="options-row">
+            <button id="exportPdfBtn" class="action-btn">📄 Otevřít tisk / PDF</button>
+        </div>
+        
+        <h4>Navigace</h4>
+        <div class="options-row">
+            <a href="https://darthcrafttom.github.io/moje/" class="action-btn">🏠 Zpět na rozcestník</a>
+        </div>
+    </div>
+
+    <!-- Navigace (Controls) -->
+    <div class="controls">
+        <button id="prevBtn" title="Předchozí snímek">❮</button>
+        <span id="slideCounter">1 / 1</span>
+        <button id="nextBtn" title="Další snímek">❯</button>
+        <div class="controls-divider"></div>
+        <button id="settingsBtn" title="Nastavení vzhledu">⚙</button>
+    </div>
+
+    <script>
+        // --- LOGIKA SLIDŮ ---
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progress-bar');
+        const slideCounter = document.getElementById('slideCounter');
+        
+        const btnPrev = document.getElementById('prevBtn');
+        const btnNext = document.getElementById('nextBtn');
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+            
+            if (slides.length > 1 && progressBar) {
+                const progress = ((currentSlide) / (slides.length - 1)) * 100;
+                progressBar.style.width = progress + '%';
+            }
+            if (slideCounter) {
+                slideCounter.innerText = `${currentSlide + 1} / ${slides.length}`;
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        btnPrev.addEventListener('click', prevSlide);
+        btnNext.addEventListener('click', nextSlide);
+
+        // Klávesové zkratky
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+                prevSlide();
+            }
+        });
+
+        // Swipe podpora pro dotyková zařízení
+        let touchstartX = 0;
+        let touchendX = 0;
+        document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; }, { passive: true });
+        document.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            if (touchendX < touchstartX - 50) nextSlide(); 
+            if (touchendX > touchstartX + 50) prevSlide(); 
+        }, { passive: true });
+
+        // --- OVLÁDÁNÍ MENU A NASTAVENÍ ---
+        
+        // Zobrazení/skrytí panelu
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Zabránění kliknutí probublat do body
+            settingsPanel.classList.toggle('show');
+            resetIdleTimer();
+        });
+
+        // Zavřít menu při kliknutí mimo
+        document.addEventListener('click', (e) => {
+            if(settingsPanel.classList.contains('show') && !settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+                settingsPanel.classList.remove('show');
+                resetIdleTimer();
+            }
+        });
+
+        // Přepínání tématu (Akcentní barvy)
+        const themeBtns = document.querySelectorAll('.option-btn[data-theme]');
+        themeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                themeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.body.setAttribute('data-theme', btn.getAttribute('data-theme'));
+            });
+        });
+
+        // Přepínání pozadí
+        const bgBtns = document.querySelectorAll('.option-btn[data-bg]');
+        bgBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                bgBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.body.setAttribute('data-bg', btn.getAttribute('data-bg'));
+            });
+        });
+
+        // Tlačítko Vypnout/Zapnout animace
+        const toggleAnimBtn = document.getElementById('toggleAnimBtn');
+        toggleAnimBtn.addEventListener('click', () => {
+            const body = document.body;
+            body.classList.toggle('no-animations');
+            
+            if (body.classList.contains('no-animations')) {
+                toggleAnimBtn.classList.remove('active');
+                toggleAnimBtn.innerHTML = '✨ Animace: VYP';
+            } else {
+                toggleAnimBtn.classList.add('active');
+                toggleAnimBtn.innerHTML = '✨ Animace: ZAP';
+            }
+        });
+
+        // Tlačítko Export PDF (zavolá dialog pro tisk)
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+        exportPdfBtn.addEventListener('click', () => {
+            settingsPanel.classList.remove('show'); // Skryjeme menu
+            // Mírné zpoždění, aby se stihlo zavřít menu před vyvoláním tisku
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        });
+
+        // --- SKRÝVÁNÍ MYŠI A PANELU PŘI NEAKTIVITĚ ---
+        let idleTimer;
+        const idleDelay = 3000; // Počet milisekund do skrytí (3 sekundy)
+
+        function resetIdleTimer() {
+            document.body.classList.remove('idle');
+            clearTimeout(idleTimer);
+            
+            // Nezačneme odpočítávat skrývání, pokud je otevřené menu nastavení
+            if (!settingsPanel.classList.contains('show')) {
+                idleTimer = setTimeout(() => {
+                    document.body.classList.add('idle');
+                }, idleDelay);
+            }
+        }
+
+        // Sledování uživatelské aktivity
+        ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+            document.addEventListener(evt, resetIdleTimer, { passive: true });
+        });
+
+        // Inicializace prvního slidu a odpočtu
+        updateSlide();
+        resetIdleTimer();
+    </script>
+</body>
+</html>
